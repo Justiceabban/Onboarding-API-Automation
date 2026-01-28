@@ -1,0 +1,55 @@
+# Alternative GitLab CI - Simpler Version
+# Use this if the main .gitlab-ci.yml has issues
+
+stages:
+  - test
+  - report
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+
+cache:
+  paths:
+    - .m2/repository
+
+# Run tests
+test-api:
+  stage: test
+  image: maven:3.8.6-openjdk-11
+  script:
+    - mvn clean test
+  artifacts:
+    when: always
+    paths:
+      - target/allure-results/
+      - target/surefire-reports/
+    expire_in: 7 days
+  allow_failure: true
+
+# Generate Allure report
+generate-report:
+  stage: report
+  image: maven:3.8.6-openjdk-11
+  dependencies:
+    - test-api
+  script:
+    - mvn allure:report
+  artifacts:
+    paths:
+      - target/site/allure-maven-plugin/
+    expire_in: 30 days
+
+# Deploy to GitLab Pages
+pages:
+  stage: report
+  dependencies:
+    - generate-report
+  script:
+    - mkdir -p public
+    - cp -r target/site/allure-maven-plugin/* public/
+  artifacts:
+    paths:
+      - public
+  only:
+    - main
+    - master

@@ -1,0 +1,108 @@
+stages:
+  - build
+  - test
+  - report
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+  MAVEN_CLI_OPTS: "--batch-mode --errors --fail-at-end --show-version"
+  ALLURE_VERSION: "2.25.0"
+
+# Cache Maven dependencies
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - .m2/repository
+    - target/
+
+# Build stage - compile code
+build:
+  stage: build
+  image: maven:3.8.6-openjdk-11
+  script:
+    - echo "Building project..."
+    - mvn $MAVEN_CLI_OPTS clean compile test-compile
+  artifacts:
+    paths:
+      - target/
+    expire_in: 1 hour
+
+# Test stage - run tests and generate allure results
+test:
+  stage: test
+  image: maven:3.8.6-openjdk-11
+  dependencies:
+    - build
+  script:
+    - echo "Running API tests..."
+    - mvn $MAVEN_CLI_OPTS test -Dtest=*Test || true
+    - echo "Tests completed"
+  artifacts:
+    when: always
+    paths:
+      - target/allure-results/
+      - target/surefire-reports/
+    reports:
+      junit:
+        - target/surefire-reports/TEST-*.xml
+    expire_in: 7 days
+  allow_failure: true
+
+# Report stage - generate Allure HTML report
+allure-report:
+  stage: report
+  image:
+    name: frankescobar/allure-docker-service:latest
+    entrypoint: [""]
+  dependencies:
+    - test
+  before_script:
+    - echo "Preparing Allure report generation..."
+  script:
+    - echo "Generating Allure report..."
+    # Install Allure commandline
+    - apt-get update && apt-get install -y wget unzip
+    - wget https://github.com/allure-framework/allure2/releases/download/${ALLURE_VERSION}/allure-${ALLURE_VERSION}.zip
+    - unzip allure-${ALLURE_VERSION}.zip -d /opt/
+    - ln -s /opt/allure-${ALLURE_VERSION}/bin/allure /usr/bin/allure
+    - allure --version
+
+    # Generate Allure report
+    - allure generate target/allure-results --clean -o allure-report
+
+    # Create index file if missing
+    - |
+      if [ ! -f allure-report/index.html ]; then
+        echo "Creating index.html redirect..."
+        echo '<html><head><meta http-equiv="refresh" content="0; url=./index.html"></head></html>' > allure-report/index.html
+      fi
+
+    - echo "Allure report generated successfully!"
+    - ls -la allure-report/
+  artifacts:
+    name: "allure-report-${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}"
+    when: always
+    paths:
+      - allure-report/
+    expire_in: 30 days
+  allow_failure: false
+
+# Deploy report to GitLab Pages (optional - for public access)
+pages:
+  stage: report
+  dependencies:
+    - allure-report
+  script:
+    - echo "Deploying Allure report to GitLab Pages..."
+    - mkdir -p public
+    - cp -r allure-report/* public/
+    - echo "Report available at GitLab Pages URL"
+  artifacts:
+    paths:
+      - public
+    expire_in: 30 days
+  only:
+    - main
+    - master
+    - develop
+  allow_failure: true
