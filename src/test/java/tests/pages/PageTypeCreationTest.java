@@ -538,17 +538,15 @@ public class PageTypeCreationTest {
             Map<String, Object> pageRequest = new HashMap<>();
             pageRequest.put("templateType", "oba_text_video_template");
             pageRequest.put("chapterSlug", testChapterSlug);
-            pageRequest.put("language", "en");
-            pageRequest.put("includeInPublishing", true);
 
             Map<String, Object> content = new HashMap<>();
+            content.put("title", "Mobiless video");
             content.put("templateType", "oba_text_video_template");
-            content.put("title", "Video Template Test Page");
-            content.put("description", createRichTextContent("Video description content"));
-            content.put("videoUrl", "https://example.com/video.mp4");
-            content.put("subtitleUrl", "https://example.com/subtitles.srt");
-            content.put("videoDescription", "Introduction video");
-            content.put("information", createRichTextContent("Additional information"));
+            content.put("description", createRichTextContent("Do not make a mistake intelligence for wisdom. You can be smart but not necessarily wise."));
+            content.put("videoUrl", "https://a.storyblok.com/f/302172/x/ae28e99b93/cloud-engineering-associate-20240626_163243-meeting-recording.mp4");
+            content.put("subtitleUrl", "https://a.storyblok.com/f/302172/x/ae28e99b93/subtitles.srt");
+            content.put("videoDescription", "Introduction to company culture");
+            content.put("information", createEmptyRichTextContent());
 
             pageRequest.put("content", content);
 
@@ -563,6 +561,7 @@ public class PageTypeCreationTest {
             System.out.println("✓ Successfully created Video with Text template page");
         });
     }
+
 
     @Test(description = "Create Embedded Content Template Page - oba_embed_template", priority = 11)
     @Story("Page Type Creation")
@@ -622,6 +621,22 @@ public class PageTypeCreationTest {
         paragraphContent.add(textNode);
 
         paragraph.put("content", paragraphContent);
+        content.add(paragraph);
+        richText.put("content", content);
+
+        return richText;
+    }
+
+    /**
+     * Creates empty rich text content with just an empty paragraph
+     */
+    private Map<String, Object> createEmptyRichTextContent() {
+        Map<String, Object> richText = new HashMap<>();
+        richText.put("type", "doc");
+
+        List<Map<String, Object>> content = new ArrayList<>();
+        Map<String, Object> paragraph = new HashMap<>();
+        paragraph.put("type", "paragraph");
         content.add(paragraph);
         richText.put("content", content);
 

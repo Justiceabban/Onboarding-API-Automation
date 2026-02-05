@@ -23,6 +23,7 @@ public class JourneyTagsCRUDTest {
     // Test data
     private static final String TEST_ASSET_ID = "d0f9b79d-c9d2-48a2-94e5-363787223829";
     private String testJourneyId;
+    private String testJourneySlug;
     private String testJourneyTitle;
     private String testCategoryId;
     private String testCategoryName;
@@ -58,29 +59,37 @@ public class JourneyTagsCRUDTest {
             if (createJourneyResponse.getStatusCode() == 200 || createJourneyResponse.getStatusCode() == 201) {
                 System.out.println("✓ Test journey created: " + testJourneyTitle);
 
-                // Get the journey ID by searching
+                // Get the journey ID and slug by searching
                 Response getAllResponse = journeyClient.getAllJourneys(0, 10, testJourneyTitle, "", "");
                 if (getAllResponse.getStatusCode() == 200) {
                     try {
                         JsonNode rootNode = objectMapper.readTree(getAllResponse.getBody().asString());
                         JsonNode content = rootNode.get("content");
                         if (content != null && content.isArray() && content.size() > 0) {
-                            testJourneyId = content.get(0).get("id").asText();
+                            JsonNode journeyNode = content.get(0);
+                            testJourneyId = journeyNode.get("id").asText();
+                            testJourneySlug = journeyNode.get("slug").asText();
                             System.out.println("✓ Retrieved journey ID: " + testJourneyId);
+                            System.out.println("✓ Retrieved journey slug: " + testJourneySlug);
                         }
                     } catch (Exception e) {
-                        System.err.println("✗ Failed to extract journey ID: " + e.getMessage());
+                        System.err.println("✗ Failed to extract journey ID/slug: " + e.getMessage());
                     }
                 }
             }
 
             // 2. Create test category
+            if (testJourneySlug == null) {
+                System.err.println("✗ Cannot create category - journey slug not available");
+                return;
+            }
+
             testCategoryName = "Tags Test Category " + System.currentTimeMillis();
 
             Map<String, Object> categoryRequest = new HashMap<>();
-            categoryRequest.put("categoryName", testCategoryName);
+            categoryRequest.put("name", testCategoryName);
 
-            Response createCategoryResponse = categoryClient.createCategory(categoryRequest);
+            Response createCategoryResponse = categoryClient.createCategory(testJourneySlug, categoryRequest);
 
             if (createCategoryResponse.getStatusCode() == 200 || createCategoryResponse.getStatusCode() == 201) {
                 System.out.println("✓ Test category created: " + testCategoryName);
@@ -88,8 +97,8 @@ public class JourneyTagsCRUDTest {
                 // Extract category ID from response
                 try {
                     JsonNode responseNode = objectMapper.readTree(createCategoryResponse.getBody().asString());
-                    if (responseNode.has("categoryId")) {
-                        testCategoryId = responseNode.get("categoryId").asText();
+                    if (responseNode.has("id")) {
+                        testCategoryId = responseNode.get("id").asText();
                         System.out.println("✓ Retrieved category ID: " + testCategoryId);
                     } else if (responseNode.has("id")) {
                         testCategoryId = responseNode.get("id").asText();

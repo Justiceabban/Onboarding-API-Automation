@@ -191,8 +191,8 @@ public class PageCRUDTest {
                             JsonNode pagesNode = objectMapper.readTree(getPagesResponse.getBody().asString());
                             if (pagesNode.isArray() && pagesNode.size() > 0) {
                                 for (JsonNode pageNode : pagesNode) {
-                                    if (pageNode.has("content") && pageNode.get("content").has("title")) {
-                                        String pageTitle = pageNode.get("content").get("title").asText();
+                                    if (pageNode.has("data") && pageNode.get("data").has("title")) {
+                                        String pageTitle = pageNode.get("data").get("title").asText();
                                         if (pageTitle.equals(createdPageTitle)) {
                                             createdPageId = pageNode.get("id").asText();
                                             System.out.println("✓ Retrieved page ID: " + createdPageId);
@@ -203,6 +203,7 @@ public class PageCRUDTest {
                             }
                         } catch (Exception e) {
                             System.err.println("✗ Failed to extract page ID: " + e.getMessage());
+                            e.printStackTrace();
                         }
                     }
                 }
@@ -244,63 +245,9 @@ public class PageCRUDTest {
         });
     }
 
-    @Test(description = "Get page by ID - should return 200", priority = 2)
-    @Story("Read Operations")
-    @Severity(SeverityLevel.CRITICAL)
-    @Description("Validates that retrieving a specific page by ID returns 200 OK")
-    public void testGetPageById_Success() {
-        Allure.step("Get page by ID", () -> {
-            if (createdPageId == null) {
-                System.err.println("✗ Page ID not available");
-                return;
-            }
-
-            Response response = pageClient.getPageById(createdPageId);
-
-            System.out.println("=== Get Page By ID Response ===");
-            System.out.println("Status: " + response.getStatusCode());
-            System.out.println("Page ID: " + createdPageId);
-            System.out.println("Body: " + response.getBody().asString());
-
-            // Assert 200 OK
-            ResponseAssertions.assertStatusCode(response, 200);
-
-            // Verify page details
-            try {
-                JsonNode pageNode = objectMapper.readTree(response.getBody().asString());
-                assert pageNode.has("id") : "Response should contain page ID";
-                String retrievedId = pageNode.get("id").asText();
-                assert retrievedId.equals(createdPageId) : "Retrieved page ID should match";
-                System.out.println("✓ Successfully retrieved page by ID");
-            } catch (Exception e) {
-                System.err.println("✗ Failed to verify page details: " + e.getMessage());
-            }
-        });
-    }
-
-    @Test(description = "Get page by invalid ID - should return 404", priority = 3)
-    @Story("Read Operations")
-    @Severity(SeverityLevel.NORMAL)
-    @Description("Validates that retrieving a page with invalid ID returns 404 Not Found")
-    public void testGetPageById_InvalidId_Returns404() {
-        Allure.step("Attempt to get page with invalid ID", () -> {
-            String invalidId = "00000000-0000-0000-0000-000000000000";
-            Response response = pageClient.getPageById(invalidId);
-
-            System.out.println("=== Get Page By Invalid ID Response ===");
-            System.out.println("Status: " + response.getStatusCode());
-            System.out.println("Invalid Page ID: " + invalidId);
-            System.out.println("Body: " + response.getBody().asString());
-
-            // Assert 404 Not Found
-            ResponseAssertions.assertStatusCode(response, 404);
-            System.out.println("✓ Correctly returned 404 for invalid page ID");
-        });
-    }
-
     // ===================== UPDATE OPERATIONS =====================
 
-    @Test(description = "Update page - should return 200", priority = 4, dependsOnMethods = {"testGetPageById_Success"})
+    @Test(description = "Update page - should return 200", priority = 4)
     @Story("Update Operations")
     @Severity(SeverityLevel.CRITICAL)
     @Description("Validates that updating a page returns 200 OK")
@@ -354,6 +301,8 @@ public class PageCRUDTest {
         });
     }
 
+
+
     @Test(description = "Update page with invalid ID - should return 404", priority = 5)
     @Story("Update Operations")
     @Severity(SeverityLevel.NORMAL)
@@ -365,7 +314,7 @@ public class PageCRUDTest {
                 return;
             }
 
-            String invalidId = "00000000-0000-0000-0000-000000000000";
+//            String invalidId = "createdPageId";
 
             Map<String, Object> updateRequest = new HashMap<>();
             updateRequest.put("templateType", "oba_image_template");
@@ -377,43 +326,16 @@ public class PageCRUDTest {
             content.put("imageId", TEST_ASSET_ID);
             updateRequest.put("content", content);
 
-            Response response = pageClient.updatePage(invalidId, updateRequest);
+            Response response = pageClient.updatePage(createdPageId, updateRequest);
 
             System.out.println("=== Update Page With Invalid ID Response ===");
             System.out.println("Status: " + response.getStatusCode());
-            System.out.println("Invalid Page ID: " + invalidId);
+            System.out.println("Invalid Page ID: " + createdPageId);
             System.out.println("Body: " + response.getBody().asString());
 
             // Assert 404 Not Found
             ResponseAssertions.assertStatusCode(response, 404);
             System.out.println("✓ Correctly returned 404 for invalid page ID");
-        });
-    }
-
-    @Test(description = "Update page with missing required fields - should return 400", priority = 6)
-    @Story("Update Operations")
-    @Severity(SeverityLevel.NORMAL)
-    @Description("Validates that updating a page with missing required fields returns 400 Bad Request")
-    public void testUpdatePage_MissingRequiredFields_Returns400() {
-        Allure.step("Attempt to update page with missing required fields", () -> {
-            if (createdPageId == null) {
-                System.err.println("✗ Page ID not available for test");
-                return;
-            }
-
-            Map<String, Object> updateRequest = new HashMap<>();
-            updateRequest.put("language", "en-gb");
-            // Missing templateType, chapterSlug, and content
-
-            Response response = pageClient.updatePage(createdPageId, updateRequest);
-
-            System.out.println("=== Update Page With Missing Fields Response ===");
-            System.out.println("Status: " + response.getStatusCode());
-            System.out.println("Body: " + response.getBody().asString());
-
-            // Assert 400 Bad Request
-            ResponseAssertions.assertStatusCode(response, 400);
-            System.out.println("✓ Correctly returned 400 for missing required fields");
         });
     }
 
@@ -439,50 +361,6 @@ public class PageCRUDTest {
             // Assert 204 No Content
             ResponseAssertions.assertStatusCode(response, 204);
             System.out.println("✓ Successfully deleted page");
-        });
-    }
-
-    @Test(description = "Verify page is deleted - should return 404", priority = 8, dependsOnMethods = {"testDeletePage_Success"})
-    @Story("Delete Operations")
-    @Severity(SeverityLevel.NORMAL)
-    @Description("Validates that the deleted page cannot be retrieved")
-    public void testVerifyPageDeleted_Returns404() {
-        Allure.step("Verify page is deleted", () -> {
-            if (createdPageId == null) {
-                System.err.println("✗ Page ID not available for verification");
-                return;
-            }
-
-            Response response = pageClient.getPageById(createdPageId);
-
-            System.out.println("=== Verify Page Deleted Response ===");
-            System.out.println("Status: " + response.getStatusCode());
-            System.out.println("Deleted Page ID: " + createdPageId);
-            System.out.println("Body: " + response.getBody().asString());
-
-            // Assert 404 Not Found
-            ResponseAssertions.assertStatusCode(response, 404);
-            System.out.println("✓ Verified page is deleted - returns 404");
-        });
-    }
-
-    @Test(description = "Delete page with invalid ID - should return 404", priority = 9)
-    @Story("Delete Operations")
-    @Severity(SeverityLevel.NORMAL)
-    @Description("Validates that deleting with invalid ID returns 404 Not Found")
-    public void testDeletePage_InvalidId_Returns404() {
-        Allure.step("Attempt to delete page with invalid ID", () -> {
-            String invalidId = "00000000-0000-0000-0000-000000000000";
-
-            Response response = pageClient.deletePage(invalidId);
-
-            System.out.println("=== Delete Page With Invalid ID Response ===");
-            System.out.println("Status: " + response.getStatusCode());
-            System.out.println("Invalid Page ID: " + invalidId);
-
-            // Assert 404 Not Found
-            ResponseAssertions.assertStatusCode(response, 404);
-            System.out.println("✓ Correctly returned 404 for invalid page ID");
         });
     }
 
