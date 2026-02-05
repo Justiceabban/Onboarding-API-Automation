@@ -17,7 +17,7 @@ import java.util.*;
  */
 @Epic("Knowledge Management")
 @Feature("Knowledge Items")
-public class KnowledgeItemTest {
+public class eKnowledgeItemTest {
     private KnowledgeItemClient client;
 
     // Using an existing journey ID from the system for testing
