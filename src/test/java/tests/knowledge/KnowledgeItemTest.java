@@ -2,6 +2,8 @@ package tests.knowledge;
 
 import assertions.*;
 import client.*;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import config.*;
 import io.qameta.allure.*;
 import io.restassured.response.*;
@@ -17,11 +19,16 @@ import java.util.*;
  */
 @Epic("Knowledge Management")
 @Feature("Knowledge Items")
-public class eKnowledgeItemTest {
+public class KnowledgeItemTest {
     private KnowledgeItemClient client;
+    private JourneyClient journeyClient;
+    private ObjectMapper objectMapper;
 
-    // Using an existing journey ID from the system for testing
-    private static final String TEST_JOURNEY_SLUG = "3e888b3d-d390-4b39-ad52-a670394f8b3c";
+    // Test data
+    private static final String TEST_ASSET_ID = "d0f9b79d-c9d2-48a2-94e5-363787223829";
+    private String testJourneySlug;
+    private String testJourneyId;
+    private String testJourneyTitle;
 
     private String createdKnowledgeItemId;
     private String createdChecklistKnowledgeId;
@@ -29,6 +36,71 @@ public class eKnowledgeItemTest {
     @BeforeClass
     public void setup() {
         client = new KnowledgeItemClient();
+        journeyClient = new JourneyClient();
+        objectMapper = new ObjectMapper();
+
+        // Create a test journey for knowledge item testing
+        createTestJourney();
+    }
+
+    /**
+     * Helper method to create a test journey for knowledge item operations
+     */
+    private void createTestJourney() {
+        Allure.step("Setup: Create test journey for Knowledge Item tests", () -> {
+            testJourneyTitle = "Knowledge Item Test Journey " + System.currentTimeMillis();
+
+            Map<String, Object> journeyRequest = new HashMap<>();
+            journeyRequest.put("title", testJourneyTitle);
+            journeyRequest.put("assetId", TEST_ASSET_ID);
+            journeyRequest.put("assetDescription", "Journey for knowledge item testing");
+            journeyRequest.put("language", "en-gb");
+
+            Response createResponse = journeyClient.createJourney(journeyRequest);
+
+            if (createResponse.getStatusCode() == 200 || createResponse.getStatusCode() == 201) {
+                System.out.println("✓ Test journey created successfully: " + testJourneyTitle);
+
+                // Get the journey slug by searching
+                Response getAllResponse = journeyClient.getAllJourneys(0, 10, testJourneyTitle);
+                if (getAllResponse.getStatusCode() == 200) {
+                    try {
+                        JsonNode rootNode = objectMapper.readTree(getAllResponse.getBody().asString());
+                        JsonNode content = rootNode.get("content");
+                        if (content != null && content.isArray() && content.size() > 0) {
+                            testJourneyId = content.get(0).get("id").asText();
+                            testJourneySlug = content.get(0).get("slug").asText();
+                            System.out.println("✓ Retrieved journey ID: " + testJourneyId);
+                            System.out.println("✓ Retrieved journey slug: " + testJourneySlug);
+                        }
+                    } catch (Exception e) {
+                        System.err.println("✗ Failed to extract journey details: " + e.getMessage());
+                        // Fallback to a known journey if creation fails
+                        testJourneySlug = "3e888b3d-d390-4b39-ad52-a670394f8b3c";
+                    }
+                }
+            } else {
+                System.err.println("✗ Failed to create test journey: " + createResponse.getStatusCode());
+                // Fallback to a known journey if creation fails
+                testJourneySlug = "3e888b3d-d390-4b39-ad52-a670394f8b3c";
+            }
+        });
+    }
+
+    @AfterClass
+    public void cleanup() {
+        Allure.step("Cleanup: Delete test journey", () -> {
+            if (testJourneyId != null) {
+                try {
+                    Response deleteResponse = journeyClient.deleteJourney(testJourneyId);
+                    if (deleteResponse.getStatusCode() == 204 || deleteResponse.getStatusCode() == 200) {
+                        System.out.println("✓ Cleanup: Test journey deleted");
+                    }
+                } catch (Exception e) {
+                    System.err.println("⚠ Cleanup: Failed to delete test journey: " + e.getMessage());
+                }
+            }
+        });
     }
 
     // ========== CREATE KNOWLEDGE ITEM TESTS (CHECKLIST) ==========
@@ -40,15 +112,15 @@ public class eKnowledgeItemTest {
     public void testCreateChecklistKnowledgeItem_Success() {
         // Arrange
         Map<String, Object> request = new HashMap<>();
-        request.put("type", "checklist");
+        request.put("type", "Checklist");
         request.put("name", "Journey Checklist " + System.currentTimeMillis());
 
         System.out.println("=== Create Checklist Knowledge Item Test ===");
-        System.out.println("Journey Slug: " + TEST_JOURNEY_SLUG);
+        System.out.println("Journey Slug: " + testJourneySlug);
         System.out.println("Request: " + request);
 
         // Act
-        Response response = client.createKnowledgeItem(TEST_JOURNEY_SLUG, request);
+        Response response = client.createKnowledgeItem(testJourneySlug, request);
 
         System.out.println("Status Code: " + response.getStatusCode());
         System.out.println("Response Body: " + response.getBody().asString());
@@ -84,11 +156,11 @@ public class eKnowledgeItemTest {
         request.put("name", "Journey FAQs " + System.currentTimeMillis());
 
         System.out.println("=== Create FAQ Knowledge Item Test ===");
-        System.out.println("Journey Slug: " + TEST_JOURNEY_SLUG);
+        System.out.println("Journey Slug: " + testJourneySlug);
         System.out.println("Request: " + request);
 
         // Act
-        Response response = client.createKnowledgeItem(TEST_JOURNEY_SLUG, request);
+        Response response = client.createKnowledgeItem(testJourneySlug, request);
 
         System.out.println("Status Code: " + response.getStatusCode());
         System.out.println("Response Body: " + response.getBody().asString());
@@ -124,7 +196,7 @@ public class eKnowledgeItemTest {
         System.out.println("=== Create Knowledge Item (Missing Fields) Test ===");
 
         // Act
-        Response response = client.createKnowledgeItem(TEST_JOURNEY_SLUG, request);
+        Response response = client.createKnowledgeItem(testJourneySlug, request);
 
         System.out.println("Status Code: " + response.getStatusCode());
         System.out.println("Response Body: " + response.getBody().asString());
@@ -146,7 +218,7 @@ public class eKnowledgeItemTest {
         System.out.println("=== Create Knowledge Item (Invalid Type) Test ===");
 
         // Act
-        Response response = client.createKnowledgeItem(TEST_JOURNEY_SLUG, request);
+        Response response = client.createKnowledgeItem(testJourneySlug, request);
 
         System.out.println("Status Code: " + response.getStatusCode());
 
@@ -195,7 +267,7 @@ public class eKnowledgeItemTest {
             System.out.println("=== Create Knowledge Item (Unauthorized) Test ===");
 
             // Act
-            Response response = client.createKnowledgeItem(TEST_JOURNEY_SLUG, request);
+            Response response = client.createKnowledgeItem(testJourneySlug, request);
 
             System.out.println("Status Code: " + response.getStatusCode());
 
@@ -448,10 +520,10 @@ public class eKnowledgeItemTest {
     public void testGetKnowledgeItemsByJourney_Success() {
         // Arrange
         System.out.println("=== Get Knowledge Items By Journey Test ===");
-        System.out.println("Journey Slug: " + TEST_JOURNEY_SLUG);
+        System.out.println("Journey Slug: " + testJourneySlug);
 
         // Act
-        Response response = client.getKnowledgeItems(TEST_JOURNEY_SLUG);
+        Response response = client.getKnowledgeItems(testJourneySlug);
 
         System.out.println("Status Code: " + response.getStatusCode());
         System.out.println("Response Body: " + response.getBody().asString());
@@ -498,7 +570,7 @@ public class eKnowledgeItemTest {
             System.out.println("=== Get Knowledge Items (Unauthorized) Test ===");
 
             // Act
-            Response response = client.getKnowledgeItems(TEST_JOURNEY_SLUG);
+            Response response = client.getKnowledgeItems(testJourneySlug);
 
             System.out.println("Status Code: " + response.getStatusCode());
 
@@ -609,5 +681,4 @@ public class eKnowledgeItemTest {
         }
     }
 }
-
 

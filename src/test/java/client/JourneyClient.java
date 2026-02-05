@@ -97,7 +97,7 @@ public class JourneyClient {
                 .pathParam("journeyId", journeyId)
                 .body(requestBody)
                 .when()
-                .put(BASE_PATH + "/journey/{journeyId}");
+                .put(BASE_PATH + "/journeys/{journeyId}");
     }
 
     /**

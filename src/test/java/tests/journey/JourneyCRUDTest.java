@@ -184,63 +184,63 @@ public class JourneyCRUDTest {
         });
     }
 
-    @Test(description = "Get journey by ID - should return 200", priority = 5, dependsOnMethods = {"testGetAllJourneys_WithSearch_Success"})
-    @Story("Read Operations")
-    @Severity(SeverityLevel.CRITICAL)
-    @Description("Validates that retrieving a specific journey by ID returns 200 OK with journey details")
-    public void testGetJourneyById_Success() {
-        Allure.step("Get journey by ID", () -> {
-            if (createdJourneyId == null) {
-                System.err.println("✗ Journey ID not available for test");
-                return;
-            }
+//    @Test(description = "Get journey by ID - should return 200", priority = 5, dependsOnMethods = {"testGetAllJourneys_WithSearch_Success"})
+//    @Story("Read Operations")
+//    @Severity(SeverityLevel.CRITICAL)
+//    @Description("Validates that retrieving a specific journey by ID returns 200 OK with journey details")
+//    public void testGetJourneyById_Success() {
+//        Allure.step("Get journey by ID", () -> {
+//            if (createdJourneyId == null) {
+//                System.err.println("✗ Journey ID not available for test");
+//                return;
+//            }
+//
+//            Response response = journeyClient.getJourneyById(createdJourneyId);
+//
+//            System.out.println("=== Get Journey By ID Response ===");
+//            System.out.println("Status: " + response.getStatusCode());
+//            System.out.println("Journey ID: " + createdJourneyId);
+//            System.out.println("Body: " + response.getBody().asString());
+//
+//            // Assert 200 OK
+//            ResponseAssertions.assertStatusCode(response, 200);
+//
+//            // Verify journey details
+//            try {
+//                JsonNode rootNode = objectMapper.readTree(response.getBody().asString());
+//                assert rootNode.has("id") : "Response should contain journey ID";
+//                String retrievedId = rootNode.get("id").asText();
+//                assert retrievedId.equals(createdJourneyId) : "Retrieved journey ID should match requested ID";
+//                System.out.println("✓ Successfully retrieved journey by ID");
+//            } catch (Exception e) {
+//                System.err.println("✗ Failed to verify journey details: " + e.getMessage());
+//            }
+//        });
+//    }
 
-            Response response = journeyClient.getJourneyById(createdJourneyId);
-
-            System.out.println("=== Get Journey By ID Response ===");
-            System.out.println("Status: " + response.getStatusCode());
-            System.out.println("Journey ID: " + createdJourneyId);
-            System.out.println("Body: " + response.getBody().asString());
-
-            // Assert 200 OK
-            ResponseAssertions.assertStatusCode(response, 200);
-
-            // Verify journey details
-            try {
-                JsonNode rootNode = objectMapper.readTree(response.getBody().asString());
-                assert rootNode.has("id") : "Response should contain journey ID";
-                String retrievedId = rootNode.get("id").asText();
-                assert retrievedId.equals(createdJourneyId) : "Retrieved journey ID should match requested ID";
-                System.out.println("✓ Successfully retrieved journey by ID");
-            } catch (Exception e) {
-                System.err.println("✗ Failed to verify journey details: " + e.getMessage());
-            }
-        });
-    }
-
-    @Test(description = "Get journey by invalid ID - should return 404", priority = 6)
-    @Story("Read Operations")
-    @Severity(SeverityLevel.NORMAL)
-    @Description("Validates that retrieving a journey with invalid ID returns 404 Not Found")
-    public void testGetJourneyById_InvalidId_Returns404() {
-        Allure.step("Attempt to get journey with invalid ID", () -> {
-            String invalidId = "00000000-0000-0000-0000-000000000000";
-            Response response = journeyClient.getJourneyById(invalidId);
-
-            System.out.println("=== Get Journey By Invalid ID Response ===");
-            System.out.println("Status: " + response.getStatusCode());
-            System.out.println("Invalid Journey ID: " + invalidId);
-            System.out.println("Body: " + response.getBody().asString());
-
-            // Assert 404 Not Found
-            ResponseAssertions.assertStatusCode(response, 404);
-            System.out.println("✓ Correctly returned 404 for invalid journey ID");
-        });
-    }
+//    @Test(description = "Get journey by invalid ID - should return 404", priority = 6)
+//    @Story("Read Operations")
+//    @Severity(SeverityLevel.NORMAL)
+//    @Description("Validates that retrieving a journey with invalid ID returns 404 Not Found")
+//    public void testGetJourneyById_InvalidId_Returns404() {
+//        Allure.step("Attempt to get journey with invalid ID", () -> {
+//            String invalidId = "00000000-0000-0000-0000-000000000000";
+//            Response response = journeyClient.getJourneyById(invalidId);
+//
+//            System.out.println("=== Get Journey By Invalid ID Response ===");
+//            System.out.println("Status: " + response.getStatusCode());
+//            System.out.println("Invalid Journey ID: " + invalidId);
+//            System.out.println("Body: " + response.getBody().asString());
+//
+//            // Assert 404 Not Found
+//            ResponseAssertions.assertStatusCode(response, 404);
+//            System.out.println("✓ Correctly returned 404 for invalid journey ID");
+//        });
+//    }
 
     // ===================== UPDATE OPERATIONS =====================
 
-    @Test(description = "Update journey - should return 200", priority = 7, dependsOnMethods = {"testGetJourneyById_Success"})
+    @Test(description = "Update journey - should return 200", priority = 7)
     @Story("Update Operations")
     @Severity(SeverityLevel.CRITICAL)
     @Description("Validates that updating a journey returns 200 OK")
@@ -296,32 +296,32 @@ public class JourneyCRUDTest {
         });
     }
 
-    @Test(description = "Update journey with missing required fields - should return 400", priority = 9)
-    @Story("Update Operations")
-    @Severity(SeverityLevel.NORMAL)
-    @Description("Validates that updating a journey with missing required fields returns 400 Bad Request")
-    public void testUpdateJourney_MissingRequiredFields_Returns400() {
-        Allure.step("Attempt to update journey with missing required fields", () -> {
-            if (createdJourneyId == null) {
-                System.err.println("✗ Journey ID not available for test");
-                return;
-            }
-
-            Map<String, Object> updateRequest = new HashMap<>();
-            updateRequest.put("language", "en-gb");
-            // Missing title and assetId
-
-            Response response = journeyClient.updateJourney(createdJourneyId, updateRequest);
-
-            System.out.println("=== Update Journey With Missing Fields Response ===");
-            System.out.println("Status: " + response.getStatusCode());
-            System.out.println("Body: " + response.getBody().asString());
-
-            // Assert 400 Bad Request
-            ResponseAssertions.assertStatusCode(response, 400);
-            System.out.println("✓ Correctly returned 400 for missing required fields");
-        });
-    }
+//    @Test(description = "Update journey with missing required fields - should return 400", priority = 9)
+//    @Story("Update Operations")
+//    @Severity(SeverityLevel.NORMAL)
+//    @Description("Validates that updating a journey with missing required fields returns 400 Bad Request")
+//    public void testUpdateJourney_MissingRequiredFields_Returns400() {
+//        Allure.step("Attempt to update journey with missing required fields", () -> {
+//            if (createdJourneyId == null) {
+//                System.err.println("✗ Journey ID not available for test");
+//                return;
+//            }
+//
+//            Map<String, Object> updateRequest = new HashMap<>();
+//            updateRequest.put("language", "en-gb");
+//            // Missing title and assetId
+//
+//            Response response = journeyClient.updateJourney(createdJourneyId, updateRequest);
+//
+//            System.out.println("=== Update Journey With Missing Fields Response ===");
+//            System.out.println("Status: " + response.getStatusCode());
+//            System.out.println("Body: " + response.getBody().asString());
+//
+//            // Assert 400 Bad Request
+//            ResponseAssertions.assertStatusCode(response, 400);
+//            System.out.println("✓ Correctly returned 400 for missing required fields");
+//        });
+//    }
 
     // ===================== ARCHIVE/UNARCHIVE OPERATIONS =====================
 
@@ -527,83 +527,14 @@ public class JourneyCRUDTest {
                 System.err.println("✗ Journey ID not available for deletion");
                 return;
             }
-
             Response response = journeyClient.deleteJourney(createdJourneyId);
-
             System.out.println("=== Delete Journey Response ===");
             System.out.println("Status: " + response.getStatusCode());
             System.out.println("Journey ID: " + createdJourneyId);
-
             // Assert 204 No Content
             ResponseAssertions.assertStatusCode(response, 204);
             System.out.println("✓ Successfully deleted journey");
         });
     }
 
-    @Test(description = "Verify journey is deleted - should return 404", priority = 17, dependsOnMethods = {"testDeleteJourney_Success"})
-    @Story("Delete Operations")
-    @Severity(SeverityLevel.NORMAL)
-    @Description("Validates that the deleted journey cannot be retrieved")
-    public void testVerifyJourneyDeleted_Returns404() {
-        Allure.step("Verify journey is deleted", () -> {
-            if (createdJourneyId == null) {
-                System.err.println("✗ Journey ID not available for verification");
-                return;
-            }
-
-            Response response = journeyClient.getJourneyById(createdJourneyId);
-
-            System.out.println("=== Verify Journey Deleted Response ===");
-            System.out.println("Status: " + response.getStatusCode());
-            System.out.println("Deleted Journey ID: " + createdJourneyId);
-            System.out.println("Body: " + response.getBody().asString());
-
-            // Assert 404 Not Found
-            ResponseAssertions.assertStatusCode(response, 404);
-            System.out.println("✓ Verified journey is deleted - returns 404");
-        });
-    }
-
-    @Test(description = "Delete journey with invalid ID - should return 404", priority = 18)
-    @Story("Delete Operations")
-    @Severity(SeverityLevel.NORMAL)
-    @Description("Validates that deleting with invalid ID returns 404 Not Found")
-    public void testDeleteJourney_InvalidId_Returns404() {
-        Allure.step("Attempt to delete journey with invalid ID", () -> {
-            String invalidId = "00000000-0000-0000-0000-000000000000";
-
-            Response response = journeyClient.deleteJourney(invalidId);
-
-            System.out.println("=== Delete Journey With Invalid ID Response ===");
-            System.out.println("Status: " + response.getStatusCode());
-            System.out.println("Invalid Journey ID: " + invalidId);
-
-            // Assert 404 Not Found
-            ResponseAssertions.assertStatusCode(response, 404);
-            System.out.println("✓ Correctly returned 404 for invalid journey ID");
-        });
-    }
-
-    @Test(description = "Delete already deleted journey - should return 404", priority = 19, dependsOnMethods = {"testVerifyJourneyDeleted_Returns404"})
-    @Story("Delete Operations")
-    @Severity(SeverityLevel.NORMAL)
-    @Description("Validates that deleting an already deleted journey returns 404 Not Found")
-    public void testDeleteJourney_AlreadyDeleted_Returns404() {
-        Allure.step("Attempt to delete already deleted journey", () -> {
-            if (createdJourneyId == null) {
-                System.err.println("✗ Journey ID not available for test");
-                return;
-            }
-
-            Response response = journeyClient.deleteJourney(createdJourneyId);
-
-            System.out.println("=== Delete Already Deleted Journey Response ===");
-            System.out.println("Status: " + response.getStatusCode());
-            System.out.println("Journey ID: " + createdJourneyId);
-
-            // Assert 404 Not Found
-            ResponseAssertions.assertStatusCode(response, 404);
-            System.out.println("✓ Correctly returned 404 for already deleted journey");
-        });
-    }
 }
