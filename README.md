@@ -1,6 +1,24 @@
 ﻿# Onboarding API Automation Framework
-## Overview
+[![Java](https://img.shields.io/badge/Java-11+-blue.svg)](https://www.oracle.com/java/)
+[![Maven](https://img.shields.io/badge/Maven-3.6+-red.svg)](https://maven.apache.org/)
+[![RestAssured](https://img.shields.io/badge/RestAssured-5.3+-green.svg)](https://rest-assured.io/)
+[![TestNG](https://img.shields.io/badge/TestNG-7.7+-orange.svg)](https://testng.org/)
+## 📖 Overview
 Enterprise-grade API automation framework for the **Onboarding Backend API** built with **Java**, **Rest Assured**, and **TestNG**. This framework follows industry best practices for maintainability, scalability, and clean code architecture.
+## 🎯 Key Features
+- ✅ **Clean Architecture** - Separation of test logic from request logic
+- ✅ **SOLID Principles** - Maintainable and extensible code
+- ✅ **Multi-Environment Support** - Dev, Test, Stage
+- ✅ **Bearer Token Authentication** - Configurable and thread-safe
+- ✅ **Builder Pattern** - Fluent request model construction
+- ✅ **Comprehensive Assertions** - Status codes, headers, JSON paths, response times
+- ✅ **Detailed Logging** - SLF4J + Logback for debugging
+- ✅ **Parallel Execution** - TestNG parallel test execution
+- ✅ **No Hardcoded Values** - Everything configurable
+## 📋 Prerequisites
+- **Java 11** or higher
+- **Maven 3.6+**
+- Valid JWT bearer token for authentication
 ## 🏗️ Architecture
 The framework follows a **modular design** with clear separation of concerns:
 ```
@@ -29,20 +47,6 @@ src/test/java/
 └── utils/                # Utility classes
     └── JsonUtils.java
 ```
-## 🎯 Key Features
-- ✅ **Clean Architecture**: Separation of test logic from request logic
-- ✅ **SOLID Principles**: Maintainable and extensible code
-- ✅ **Multi-Environment Support**: Dev, Test, Stage
-- ✅ **Bearer Token Authentication**: Configurable and thread-safe
-- ✅ **Builder Pattern**: Fluent request model construction
-- ✅ **Comprehensive Assertions**: Status codes, headers, JSON paths, response times
-- ✅ **Detailed Logging**: SLF4J + Logback for debugging
-- ✅ **Parallel Execution**: TestNG parallel test execution
-- ✅ **No Hardcoded Values**: Everything configurable
-## 📋 Prerequisites
-- **Java 11** or higher
-- **Maven 3.6+**
-- Valid JWT bearer token for authentication
 ## 🚀 Getting Started
 ### 1. Configure Environment
 Edit `src/test/resources/config.properties`:
@@ -73,59 +77,54 @@ mvn clean test -Ptest
 mvn clean test -Pstage
 ```
 ### 3. View Reports
-TestNG reports are generated in:
+**TestNG reports:**
 ```
 target/surefire-reports/index.html
 ```
-Logs are available in:
+**Logs:**
 ```
 logs/test-execution.log
 ```
 ## 📁 Project Structure Details
 ### Config Package
-**EnvironmentConfig.java**
-- Loads configuration from properties file
-- Manages environment-specific URLs
-- Supports system property overrides
-**AuthManager.java**
-- Thread-safe bearer token management
-- Dynamic token injection
-- Support for tests with/without authentication
-**RequestSpecFactory.java**
-- Reusable Rest Assured request specifications
-- Automatic authentication header injection
-- Common headers and logging configuration
+| Class | Description |
+|-------|-------------|
+| **EnvironmentConfig.java** | Loads configuration from properties file<br>Manages environment-specific URLs<br>Supports system property overrides |
+| **AuthManager.java** | Thread-safe bearer token management<br>Dynamic token injection<br>Support for tests with/without authentication |
+| **RequestSpecFactory.java** | Reusable Rest Assured request specifications<br>Automatic authentication header injection<br>Common headers and logging configuration |
 ### Client Package
 Each client class represents a logical grouping of API endpoints:
-- **UserManagementClient**: User profile and preferred journey operations
-- **NotificationClient**: Notification settings management
-- **JourneyClient**: Journey CRUD operations
-- **StageClient**: Stage management and reordering
-- **PageClient**: Page retrieval and updates
-- **DataManagementClient**: Data record CRUD operations
+| Client | Responsibility |
+|--------|----------------|
+| **UserManagementClient** | User profile and preferred journey operations |
+| **NotificationClient** | Notification settings management |
+| **JourneyClient** | Journey CRUD operations |
+| **StageClient** | Stage management and reordering |
+| **PageClient** | Page retrieval and updates |
+| **DataManagementClient** | Data record CRUD operations |
 **Client Design Principles:**
-- ✅ **No Assertions**: Clients only make requests, never assert
-- ✅ **Return Response**: Always return `io.restassured.response.Response`
-- ✅ **Use RequestSpecFactory**: Reuse common request configuration
-- ✅ **Clear Method Names**: Self-documenting method signatures
+- ✅ **No Assertions** - Clients only make requests, never assert
+- ✅ **Return Response** - Always return `io.restassured.response.Response`
+- ✅ **Use RequestSpecFactory** - Reuse common request configuration
+- ✅ **Clear Method Names** - Self-documenting method signatures
 ### Models Package
-**Request Models** (models/request/):
+**Request Models** (`models/request/`):
 - Builder pattern for fluent construction
 - Jackson annotations for JSON mapping
 - Validation-ready (optional)
-**Response Models** (models/response/):
+**Response Models** (`models/response/`):
 - POJOs matching API response schemas
 - Jackson annotations for deserialization
 - ToString methods for debugging
 ### Assertions Package
 **ResponseAssertions.java** provides:
-- Status code assertions
-- Header validations
-- Response time checks
-- JSON path validations
-- Array/collection assertions
-- Model-specific assertions (ProblemDetail, GenericMessage)
-- Comprehensive error messages with response bodies
+- ✅ Status code assertions
+- ✅ Header validations
+- ✅ Response time checks
+- ✅ JSON path validations
+- ✅ Array/collection assertions
+- ✅ Model-specific assertions (ProblemDetail, GenericMessage)
+- ✅ Comprehensive error messages with response bodies
 ### Tests Package
 **Test Design Principles:**
 - ✅ **Arrange-Act-Assert** pattern
@@ -175,34 +174,35 @@ public Response getResource(String id) {
 ## 🌍 Environment Configuration
 **Available Environments:**
 | Environment | Base URL |
-|------------|----------|
-| dev | https://api.onboarding.test.gcw.ng.telekom.net |
-| test | https://api.onboardingv2.test.gcw.ng.telekom.net |
-| stage | https://api.onboarding.stage.test.gcw.ng.telekom.net |
-Switch environments by updating `config.properties` or using system properties:
+|-------------|----------|
+| **dev** | `https://api.onboarding.test.gcw.ng.telekom.net` |
+| **test** | `https://api.onboardingv2.test.gcw.ng.telekom.net` |
+| **stage** | `https://api.onboarding.stage.test.gcw.ng.telekom.net` |
+**Switch environments:**
+Update `config.properties` or use system properties:
 ```bash
 mvn test -Denvironment=stage
 ```
 ## 📊 Logging
 The framework uses **SLF4J** with **Logback** for comprehensive logging:
-- Console output for real-time feedback
-- File logging with daily rotation
-- Configurable log levels per package
-- Request/response logging for debugging
-Configure logging in `src/test/resources/logback-test.xml`
+- ✅ Console output for real-time feedback
+- ✅ File logging with daily rotation
+- ✅ Configurable log levels per package
+- ✅ Request/response logging for debugging
+**Configure logging:** `src/test/resources/logback-test.xml`
 ## 🔐 Authentication
 The framework supports Bearer token authentication:
-1. **Configure in properties file**:
+### 1. Configure in properties file:
 ```properties
 bearerToken=your-jwt-token-here
 ```
-2. **Override in tests**:
+### 2. Override in tests:
 ```java
 AuthManager.setBearerToken("custom-token");
 // Run tests
 AuthManager.clearBearerToken(); // Cleanup
 ```
-3. **Tests without authentication**:
+### 3. Tests without authentication:
 ```java
 AuthManager.clearBearerToken();
 Response response = client.publicEndpoint();
@@ -225,11 +225,11 @@ Response response = client.publicEndpoint();
 - Share state between tests
 ## 📝 Maintenance
 ### Regular Tasks:
-1. Update dependencies in `pom.xml` quarterly
-2. Review and update bearer tokens as they expire
-3. Add new endpoints as API evolves
-4. Refactor tests for better coverage
-5. Monitor and optimize slow tests
+1. ✅ Update dependencies in `pom.xml` quarterly
+2. ✅ Review and update bearer tokens as they expire
+3. ✅ Add new endpoints as API evolves
+4. ✅ Refactor tests for better coverage
+5. ✅ Monitor and optimize slow tests
 ## 🤝 Contributing
 When adding new features:
 1. Follow existing package structure
@@ -239,10 +239,10 @@ When adding new features:
 5. Update this README if needed
 ## 📞 Support
 For questions or issues:
-- Check API documentation
-- Review test logs in `logs/` directory
-- Enable DEBUG logging for detailed troubleshooting
+- 📖 Check API documentation
+- 📁 Review test logs in `logs/` directory
+- 🐛 Enable DEBUG logging for detailed troubleshooting
 ## 📄 License
 Apache 2.0 License
 ---
-**Built with ❤️ following enterprise best practices**#   O n b o a r d i n g - A P I - A u t o m a t i o n 
+**Built with ❤️ following enterprise best practices**
