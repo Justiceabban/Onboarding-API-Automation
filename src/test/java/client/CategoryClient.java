@@ -27,6 +27,22 @@ public class CategoryClient {
     }
 
     /**
+     * Create a new category within a journey.
+     * POST /api/v1/categories/{journeySlug}
+     * @param journeySlug Slug identifier of the journey
+     * @param requestBody CategoryRequest object
+     * @return Response with created category
+     */
+    public Response createCategory(String journeySlug, Object requestBody) {
+        return given()
+                .spec(RequestSpecFactory.getAdminRequestSpec())
+                .pathParam("journeySlug", journeySlug)
+                .body(requestBody)
+                .when()
+                .post(BASE_PATH + "/{journeySlug}");
+    }
+
+    /**
      * Get category by ID.
      * GET /api/v1/categories/{categoryId}
      * @param categoryId Unique identifier of the category
